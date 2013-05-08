@@ -88,7 +88,7 @@ set({DefaultLevel, CustomLevels}) when is_list(CustomLevels) ->
         {Mod,Code} = dynamic_compile:from_string(logger_src(Loglevel)),
         code:load_binary(Mod, ?LOGMODULE ++ ".erl", Code)
     catch
-        Type:Error -> ?CRITICAL_MSG("Error compiling logger (~p): ~p~n", [Type, Error])
+        Type:Error -> error_logger:error_msg("Error compiling logger (~p): ~p~n", [Type, Error])
     end;
 set(_) ->
     exit("Invalid loglevel format").
