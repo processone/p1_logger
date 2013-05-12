@@ -6,13 +6,13 @@
 %%% @end
 %%% Created :  4 Apr 2013 by Evgeniy Khramtsov <ekhramtsov@process-one.net>
 %%%-------------------------------------------------------------------
-{application, logger,
+{application, p1_logger,
  [{description,  "P1 Logger"},
   {vsn,          "0.1.0"},
   {modules,      []},
   {registered,   []},
   {applications, [kernel, stdlib]},
-  {mod,          {logger,[]}}]}.
+  {mod,          {p1_logger,[]}}]}.
 
 %% Local Variables:
 %% mode: erlang

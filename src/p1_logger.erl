@@ -5,7 +5,7 @@
 %%% @end
 %%% Created : 10 Jul 2012 by Evgeniy Khramtsov <ekhramtsov@process-one.net>
 %%%-------------------------------------------------------------------
--module(logger).
+-module(p1_logger).
 
 -compile({no_auto_import, [{get, 0}]}).
 

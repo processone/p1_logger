@@ -1,10 +1,10 @@
 %%%----------------------------------------------------------------------
-%%% File    : loglevel.erl
+%%% File    : p1_loglevel.erl
 %%% Author  : Mickael Remond <mremond@process-one.net>
 %%% Purpose : Loglevel switcher.
-%%%           Be careful: you should not have any logger module
-%%%           as loglevel switcher is compiling and loading
-%%%           dynamically a "virtual" logger module (Described
+%%%           Be careful: you should not have any p1_logger module
+%%%           as p1_loglevel switcher is compiling and loading
+%%%           dynamically a "virtual" p1_logger module (Described
 %%%           in a string at the end of this module).
 %%% Created : 29 Nov 2006 by Mickael Remond <mremond@process-one.net>
 %%%
@@ -28,7 +28,7 @@
 %%%
 %%%----------------------------------------------------------------------
 
--module(loglevel).
+-module(p1_loglevel).
 -author('mickael.remond@process-one.net').
 
 -export([set/1,
@@ -37,12 +37,12 @@
 	 clear_custom/0,
 	 clear_custom/1]).
 
--include("logger.hrl").
+-include("p1_logger.hrl").
 
 -define(LOGMODULE, "error_logger").
 
 %% Error levels:
--record(loglevel, {ordinal,
+-record(p1_loglevel, {ordinal,
 		   name,
 		   description,
 		   function = no_log,
@@ -50,16 +50,16 @@
 		   msg_prefix = no_log}).
 
 -define(LOG_LEVELS,
-	[#loglevel{ordinal = 0, name = no_log, description = "No log"},
-	 #loglevel{ordinal = 1, name = critical, description = "Critical",
+	[#p1_loglevel{ordinal = 0, name = no_log, description = "No log"},
+	 #p1_loglevel{ordinal = 1, name = critical, description = "Critical",
 		   function = critical_msg, event_type = error, msg_prefix = "C"},
-	 #loglevel{ordinal = 2, name = error, description = "Error",
+	 #p1_loglevel{ordinal = 2, name = error, description = "Error",
 		   function = error_msg, event_type = error, msg_prefix = "E"},
-	 #loglevel{ordinal = 3, name = warning, description = "Warning",
+	 #p1_loglevel{ordinal = 3, name = warning, description = "Warning",
 		   function = warning_msg, event_type = warning_msg, msg_prefix = "W"},
-	 #loglevel{ordinal = 4, name = info, description = "Info",
+	 #p1_loglevel{ordinal = 4, name = info, description = "Info",
 		   function = info_msg, event_type = info_msg, msg_prefix = "I"},
-	 #loglevel{ordinal = 5, name = debug, description = "Debug",
+	 #p1_loglevel{ordinal = 5, name = debug, description = "Debug",
 		   function = debug_msg, event_type = info_msg, msg_prefix = "D"}]).
 
 %% @type level() = integer() | atom().
@@ -67,16 +67,16 @@
 %% @spec () -> {DefaultLevelOrdinal::integer(), [{Module::atom(), LevelOrdinal::integer()}]}
 %% @doc Get the default and all custom levels
 get() ->
-    {DefaultLevel, _CustomLevels} = logger:get(),
-    case lists:keysearch(DefaultLevel, #loglevel.ordinal, ?LOG_LEVELS) of
-        {value, Result = #loglevel{}} ->
-	    {Result#loglevel.ordinal, Result#loglevel.name, Result#loglevel.description};
+    {DefaultLevel, _CustomLevels} = p1_logger:get(),
+    case lists:keysearch(DefaultLevel, #p1_loglevel.ordinal, ?LOG_LEVELS) of
+        {value, Result = #p1_loglevel{}} ->
+	    {Result#p1_loglevel.ordinal, Result#p1_loglevel.name, Result#p1_loglevel.description};
         _ ->
 	    erlang:error({no_such_loglevel, DefaultLevel})
     end.
 
 %% @spec (DefaultLevel::level() | {DefaultLevel::level(), [{Module::atom(), Level::level()}]}) ->
-%%       {module, logger}
+%%       {module, p1_logger}
 %% @doc Set the default and all custom levels
 set(DefaultLevel) when is_atom(DefaultLevel) orelse is_integer(DefaultLevel) ->
     set({DefaultLevel, []});
@@ -85,18 +85,18 @@ set({DefaultLevel, CustomLevels}) when is_list(CustomLevels) ->
     CustomInts = [level_to_integer(C) || C <- CustomLevels],
     Loglevel = {DefaultInt, CustomInts},
     try
-        {Mod,Code} = dynamic_compile:from_string(logger_src(Loglevel)),
+        {Mod,Code} = dynamic_compile:from_string(p1_logger_src(Loglevel)),
         code:load_binary(Mod, ?LOGMODULE ++ ".erl", Code)
     catch
-        Type:Error -> error_logger:error_msg("Error compiling logger (~p): ~p~n", [Type, Error])
+        Type:Error -> error_logger:error_msg("Error compiling p1_logger (~p): ~p~n", [Type, Error])
     end;
 set(_) ->
-    exit("Invalid loglevel format").
+    exit("Invalid p1_loglevel format").
 
 %% @spec (Module::atom(), CustomLevel::level()) -> ok
 %% @doc Set a custom level
 set_custom(Module, Level) ->
-    {DefaultLevel, CustomLevels} = logger:get(),
+    {DefaultLevel, CustomLevels} = p1_logger:get(),
     case lists:keysearch(Module, 1, CustomLevels) of
 	{value, {Module, Level}} ->
 	    ok;
@@ -109,13 +109,13 @@ set_custom(Module, Level) ->
 %% @spec () -> ok
 %% @doc Clear all custom levels
 clear_custom() ->
-    {DefaultLevel, _CustomLevels} = logger:get(),
+    {DefaultLevel, _CustomLevels} = p1_logger:get(),
     set({DefaultLevel, []}).
 
 %% @spec (Module::atom()) -> ok
 %% @doc Clear a custom level
 clear_custom(Module) ->
-    {DefaultLevel, CustomLevels} = logger:get(),
+    {DefaultLevel, CustomLevels} = p1_logger:get(),
     case lists:keysearch(Module, 1, CustomLevels) of
 	{value, _} ->
 	    set({DefaultLevel, lists:keydelete(Module, 1, CustomLevels)});
@@ -128,23 +128,23 @@ level_to_integer(Level) when is_integer(Level) ->
 level_to_integer({Module, Level}) ->
     {Module, level_to_integer(Level)};
 level_to_integer(Level) ->
-    case lists:keysearch(Level, #loglevel.name, ?LOG_LEVELS) of
-        {value, #loglevel{ordinal = Int}} -> Int;
+    case lists:keysearch(Level, #p1_loglevel.name, ?LOG_LEVELS) of
+        {value, #p1_loglevel{ordinal = Int}} -> Int;
         _ -> erlang:error({no_such_loglevel, Level})
     end.
 
 %% --------------------------------------------------------------
-%% Code of the logger, dynamically compiled and loaded
+%% Code of the p1_logger, dynamically compiled and loaded
 %% This allows to dynamically change log level while keeping a
 %% very efficient code.
-logger_src(Loglevel) ->
+p1_logger_src(Loglevel) ->
     lists:flatten([header_src(),
 		   get_src(Loglevel),
 		   [log_src(Loglevel, LevelSpec) || LevelSpec <- ?LOG_LEVELS],
 		   notify_src()]).
 
 header_src() ->
-    "-module(logger).
+    "-module(p1_logger).
     -author('mickael.remond@process-one.net').
 
     -export([debug_msg/4,
@@ -159,35 +159,35 @@ get_src(Loglevel) ->
     io_lib:format("get() -> ~w.
                   ", [Loglevel]).
 
-log_src(_Loglevel, #loglevel{function = no_log}) ->
+log_src(_Loglevel, #p1_loglevel{function = no_log}) ->
     [];
-log_src({DefaultLevel, [{Module, Level} | Tail]}, Spec = #loglevel{ordinal = MinLevel})
+log_src({DefaultLevel, [{Module, Level} | Tail]}, Spec = #p1_loglevel{ordinal = MinLevel})
   when Level < MinLevel andalso MinLevel =< DefaultLevel ->
-    [atom_to_list(Spec#loglevel.function), "(", atom_to_list(Module), ", _, _, _) -> ok;
+    [atom_to_list(Spec#p1_loglevel.function), "(", atom_to_list(Module), ", _, _, _) -> ok;
      ", log_src({DefaultLevel, Tail}, Spec)];
-log_src({DefaultLevel, [{Module, Level} | Tail]}, Spec = #loglevel{ordinal = MinLevel})
+log_src({DefaultLevel, [{Module, Level} | Tail]}, Spec = #p1_loglevel{ordinal = MinLevel})
   when DefaultLevel < MinLevel andalso MinLevel =< Level ->
-    [atom_to_list(Spec#loglevel.function), "(", atom_to_list(Module), " = Module, Line, Format, Args) ->",
+    [atom_to_list(Spec#p1_loglevel.function), "(", atom_to_list(Module), " = Module, Line, Format, Args) ->",
      log_notify_src(Spec), ";
      ", log_src({DefaultLevel, Tail}, Spec)];
-log_src({DefaultLevel, [_Head | Tail]}, Spec = #loglevel{}) ->
+log_src({DefaultLevel, [_Head | Tail]}, Spec = #p1_loglevel{}) ->
     log_src({DefaultLevel, Tail}, Spec);
-log_src({DefaultLevel, []}, Spec = #loglevel{ordinal = MinLevel})
+log_src({DefaultLevel, []}, Spec = #p1_loglevel{ordinal = MinLevel})
   when DefaultLevel < MinLevel ->
-    [atom_to_list(Spec#loglevel.function), "(_, _, _, _) -> ok.
+    [atom_to_list(Spec#p1_loglevel.function), "(_, _, _, _) -> ok.
      "];
-log_src({_DefaultLevel, []}, Spec = #loglevel{}) ->
-    [atom_to_list(Spec#loglevel.function), "(Module, Line, Format, Args) ->",
+log_src({_DefaultLevel, []}, Spec = #p1_loglevel{}) ->
+    [atom_to_list(Spec#p1_loglevel.function), "(Module, Line, Format, Args) ->",
      log_notify_src(Spec), ".
      "].
 
-log_notify_src(Spec = #loglevel{}) ->
-    ["notify(", atom_to_list(Spec#loglevel.event_type), ",
-        \"", Spec#loglevel.msg_prefix, "(~p:~p:~p) : \"++Format++\"~n\",
+log_notify_src(Spec = #p1_loglevel{}) ->
+    ["notify(", atom_to_list(Spec#p1_loglevel.event_type), ",
+        \"", Spec#p1_loglevel.msg_prefix, "(~p:~p:~p) : \"++Format++\"~n\",
         [self(), Module, Line | Args])"].
 
 notify_src() ->
-    %% Distribute the message to the Erlang error logger
+    %% Distribute the message to the Erlang error p1_logger
     "notify(Type, Format, Args) ->
             LoggerMsg = {Type, group_leader(), {self(), Format, Args}},
             gen_event:notify(error_logger, LoggerMsg).

@@ -1,5 +1,5 @@
 %%%----------------------------------------------------------------------
-%%% File    : logger_h.erl
+%%% File    : p1_logger_h.erl
 %%% Author  : Alexey Shchepin <alexey@process-one.net>
 %%% Purpose : Manage Erlang logging.
 %%% Created : 23 Oct 2003 by Alexey Shchepin <alexey@process-one.net>
@@ -24,7 +24,7 @@
 %%%
 %%%----------------------------------------------------------------------
 
--module(logger_h).
+-module(p1_logger_h).
 -author('alexey@process-one.net').
 
 -behaviour(gen_event).
