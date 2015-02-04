@@ -5,7 +5,7 @@
 %%% Created : 23 Oct 2003 by Alexey Shchepin <alexey@process-one.net>
 %%%
 %%%
-%%% p1_logger, Copyright (C) 2002-2013   ProcessOne
+%%% p1_logger, Copyright (C) 2002-2015   ProcessOne
 %%%
 %%% This program is free software; you can redistribute it and/or
 %%% modify it under the terms of the GNU General Public License as
